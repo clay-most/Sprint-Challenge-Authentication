@@ -1,8 +1,27 @@
-/* 
-  complete the middleware code to check if the user is logged in
-  before granting access to the next middleware/route handler
-*/
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
-module.exports = (req, res, next) => {
-  res.status(401).json({ you: 'shall not pass!' });
-};
+function authenticate() {
+  return async (req, res, next) => {
+    try {
+      console.log(req.cookies);
+      const { token } = req.cookies;
+      if (!token) {
+        return res.status(401).json({message:"You shall not pass!"});
+      }
+
+      jwt.verify(token, process.env.SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).json({message:"You shall not pass!"});
+        }
+        req.token = decoded;
+
+        next();
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+}
+
+module.exports = authenticate;
